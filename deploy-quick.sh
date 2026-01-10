@@ -29,18 +29,37 @@ echo ""
 echo "Setting up Artifact Registry..."
 REPO_NAME="docker-repo"
 
-if ! gcloud artifacts repositories describe $REPO_NAME \
+# Check if repository exists
+if gcloud artifacts repositories describe $REPO_NAME \
     --location=$REGION \
-    --repository-format=docker &>/dev/null 2>&1; then
-  echo "Creating Artifact Registry repository..."
-  gcloud artifacts repositories create $REPO_NAME \
-    --repository-format=docker \
-    --location=$REGION \
-    --description="Docker repository for PDF Chatbot" \
-    --quiet
-  echo "✓ Repository created"
-else
+    --repository-format=docker &>/dev/null; then
   echo "✓ Repository already exists"
+else
+  echo "Creating Artifact Registry repository..."
+  # Try to create, ignore "already exists" error
+  CREATE_OUTPUT=$(gcloud artifacts repositories create $REPO_NAME \
+      --repository-format=docker \
+      --location=$REGION \
+      --description="Docker repository for PDF Chatbot" \
+      2>&1) || true
+  
+  # Check if creation succeeded or if it already exists
+  if echo "$CREATE_OUTPUT" | grep -qi "ALREADY_EXISTS"; then
+    echo "✓ Repository already exists"
+  elif echo "$CREATE_OUTPUT" | grep -qi "created"; then
+    echo "✓ Repository created"
+  else
+    # Verify it exists now (may have been created concurrently)
+    if gcloud artifacts repositories describe $REPO_NAME \
+        --location=$REGION \
+        --repository-format=docker &>/dev/null; then
+      echo "✓ Repository exists"
+    else
+      echo "ERROR: Failed to create repository"
+      echo "$CREATE_OUTPUT"
+      exit 1
+    fi
+  fi
 fi
 
 # Build and push using Cloud Build (handles everything automatically)
