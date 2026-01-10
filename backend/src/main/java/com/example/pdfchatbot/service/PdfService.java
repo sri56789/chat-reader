@@ -24,6 +24,7 @@ public class PdfService {
             System.getProperty("user.dir") + "/pdfs",                    // From project root
             System.getProperty("user.dir") + "/../pdfs",                 // From backend folder
             System.getProperty("user.dir") + "/backend/pdfs",            // Alternative
+            "/app/pdfs",                                                  // Docker container path
             "pdfs",                                                       // Relative
             "../pdfs"                                                     // Relative from backend
         };
@@ -114,4 +115,3 @@ public class PdfService {
         return pdfFiles;
     }
 }
-

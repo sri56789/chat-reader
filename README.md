@@ -97,6 +97,8 @@ pdf-chatbot-starter/
 
 - `POST /api/reload` - Reload PDF documents from the pdfs folder
 
+- `GET /api/status` - Get application status
+
 ## Technologies
 
 **Backend:**

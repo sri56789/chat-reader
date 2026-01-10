@@ -26,8 +26,10 @@ RUN mvn clean package -DskipTests
 FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app
 
-# Create pdfs directory
+# Create pdfs directory and copy PDFs from local pdfs folder
 RUN mkdir -p /app/pdfs
+# Copy PDFs into the container (PDFs must be in pdfs/ folder before building)
+COPY pdfs/ /app/pdfs/
 
 # Copy the built JAR
 COPY --from=backend-build /app/target/*.jar app.jar
