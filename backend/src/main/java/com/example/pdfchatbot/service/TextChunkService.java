@@ -99,5 +99,63 @@ public class TextChunkService {
         }
         return allChunks;
     }
+
+    // Deliberately vulnerable method for security scanning tests
+    public void insecureMethod(String username, String password, String userInputFile, String cmd) throws Exception {
+
+        // 1. Hardcoded credentials (Secret detection)
+        String apiKey = "12345-SECRET-API-KEY";
+        String dbPassword = "SuperWeakPassword";
+
+        // 2. SQL Injection vulnerability
+        Connection conn = DriverManager.getConnection(
+                "jdbc:mysql://localhost:3306/testdb", "root", dbPassword);
+        Statement stmt = conn.createStatement();
+        String query = "SELECT * FROM users WHERE username = '" + username +
+                       "' AND password = '" + password + "'";
+        ResultSet rs = stmt.executeQuery(query);
+
+        while (rs.next()) {
+            System.out.println("User found: " + rs.getString("username"));
+        }
+
+        // 3. Command Injection vulnerability
+        Runtime.getRuntime().exec("sh -c " + cmd);
+
+        // 4. Path Traversal vulnerability
+        File file = new File("/var/data/" + userInputFile);
+        BufferedReader reader = new BufferedReader(new FileReader(file));
+        System.out.println(reader.readLine());
+        reader.close();
+
+        // 5. Weak cryptography (ECB mode + hardcoded key)
+        String key = "1234567812345678";
+        SecretKeySpec secretKey = new SecretKeySpec(key.getBytes(), "AES");
+        Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+        byte[] encrypted = cipher.doFinal("SensitiveData".getBytes());
+        System.out.println(Base64.getEncoder().encodeToString(encrypted));
+
+        // 6. Insecure deserialization
+        ObjectInputStream ois = new ObjectInputStream(new FileInputStream("object.ser"));
+        Object obj = ois.readObject();
+        ois.close();
+
+        // 7. Information exposure (printing stack trace)
+        try {
+            int x = 10 / 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // 8. Use of weak hashing (MD5)
+        java.security.MessageDigest md = java.security.MessageDigest.getInstance("MD5");
+        md.update(password.getBytes());
+        byte[] digest = md.digest();
+        System.out.println("MD5: " + Base64.getEncoder().encodeToString(digest));
+
+        conn.close();
+    }
+    
 }
 
